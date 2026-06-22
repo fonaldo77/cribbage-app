@@ -598,10 +598,10 @@ function renderGame(){ renderZones(); renderPegBoard(); renderScores(); renderSt
 
 function renderZones(){
   SIDES.forEach(s=>{
-    const z=document.getElementById(`zone-${s}`);
+    const z=document.getElementById(`zone-${s}`); if(!z) return;
     z.classList.remove('visible');
-    document.getElementById(`zs-${s}`).innerHTML='';
-    document.getElementById(`zh-${s}`).innerHTML='';
+    const zs=document.getElementById(`zs-${s}`); if(zs) zs.innerHTML='';
+    const zh=document.getElementById(`zh-${s}`); if(zh) zh.innerHTML='';
   });
   S.players.forEach((p,pi)=>{
     const side=p.side;
@@ -627,10 +627,11 @@ function zoneStripHTML(pi,p){
 // ── Peg Board ─────────────────────────────────────────────────────────────
 function renderPegBoard(){
   [[1,30,false],[31,60,true],[61,90,false],[91,120,true]].forEach(([s,e,rev],ci)=>{
+    const el=document.getElementById(`col-${ci}`); if(!el) return;
     let h='';
     if(rev) for(let i=e;i>=s;i--) h+=holeHTML(i);
     else    for(let i=s;i<=e;i++) h+=holeHTML(i);
-    document.getElementById(`col-${ci}`).innerHTML=h;
+    el.innerHTML=h;
   });
 }
 function holeHTML(h){
@@ -650,7 +651,7 @@ function holeHTML(h){
 }
 
 function renderScores(){
-  const grid=document.getElementById('csg');
+  const grid=document.getElementById('csg'); if(!grid) return;
   const cols=S.players.length<=2?1:2;
   grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
   grid.innerHTML=S.players.map(p=>`
@@ -668,6 +669,8 @@ function renderStarterCenter(){
   const rankEl=document.getElementById('starter-rank-center');
   const suitWrap=document.getElementById('starter-suit-wrap-center');
   const suitEl=document.getElementById('starter-suit-center');
+  // Guard: elements may not exist if game screen isn't active yet
+  if(!disp||!rankEl||!suitWrap||!suitEl) return;
 
   if(S.starter){
     const cd=S.starter;
@@ -691,7 +694,11 @@ function renderStarterCenter(){
   if(!S.starterPickingRank){ suitWrap.classList.remove('open'); suitEl.innerHTML=''; return; }
   suitWrap.classList.add('open');
   suitEl.innerHTML=SUITS.map(s=>{
-    const taken=S.players.some(p=>{ const cs=S.calc[S.players.indexOf(p)]; return cs&&cs.handCards.some(c=>c.rank===S.starterPickingRank&&c.suit===s); });
+    // Check if any player's hand already uses this rank+suit combo
+    const taken=S.players.some((_,i)=>{
+      const cs=S.calc[i];
+      return cs&&cs.handCards.some(c=>c.rank===S.starterPickingRank&&c.suit===s);
+    });
     const sc=s==='H'?'hearts':s==='D'?'diamonds':s==='C'?'clubs':'spades';
     return `<button class="suit-btn ${sc} ${taken?'unavailable':''}" onclick="starterPickSuit('${s}')">${SS[s]}</button>`;
   }).join('');
