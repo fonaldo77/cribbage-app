@@ -103,11 +103,9 @@ html, body {
 .setup-error { color: var(--danger); font-size: 11px; text-align: center; margin-bottom: 10px; min-height: 16px; }
 
 /* ══════════════════════════════════════════
-   GAME SCREEN
-   Uses CSS grid: 3 rows × 3 cols
-   [corner] [top-zone]   [corner]
-   [left  ] [board-area] [right ]
-   [corner] [bot-zone]   [corner]
+   GAME SCREEN — 3×3 CSS grid
+   col1=left-zone  col2=center  col3=right-zone
+   row1=top-zone   row2=center  row3=bot-zone
 ══════════════════════════════════════════ */
 #game-screen {
   display: none; position: fixed; inset: 0;
@@ -116,14 +114,17 @@ html, body {
 }
 #game-screen.active { display: grid; }
 
-/* Zone cells */
-#zone-top    { grid-column: 2; grid-row: 1; display: none; transform: rotate(180deg); }
-#zone-bottom { grid-column: 2; grid-row: 3; display: none; }
-#zone-left   { grid-column: 1; grid-row: 2; display: none; }
-#zone-right  { grid-column: 3; grid-row: 2; display: none; }
-.zone-cell.visible { display: flex; align-items: center; }
+/* Zone cells — hidden by default, shown when player assigned */
+#zone-top    { grid-column: 2; grid-row: 1; display: none; transform: rotate(180deg); align-items: center; }
+#zone-bottom { grid-column: 2; grid-row: 3; display: none; align-items: center; }
+#zone-left   { grid-column: 1; grid-row: 2; display: none; align-items: center; justify-content: center; overflow: hidden; }
+#zone-right  { grid-column: 3; grid-row: 2; display: none; align-items: center; justify-content: center; overflow: hidden; }
+#zone-top.visible    { display: flex; }
+#zone-bottom.visible { display: flex; }
+#zone-left.visible   { display: flex; }
+#zone-right.visible  { display: flex; }
 
-/* Horizontal zones (top/bottom): strip runs full width */
+/* Horizontal strips (top/bottom) */
 #zone-top .zone-strip,
 #zone-bottom .zone-strip {
   display: flex; align-items: center; gap: 10px;
@@ -132,16 +133,14 @@ html, body {
 }
 #zone-top .zone-strip { border-top: none; border-bottom: 1px solid var(--gold-faint); }
 
-/* Side zones (left/right): strip is rotated so it reads upright for each player */
-#zone-left  { justify-content: center; }
-#zone-right { justify-content: center; }
+/* Side strips — rotated inside their fixed-width cell */
 #zone-left .zone-strip {
   display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-  /* Width of the strip = height of the side zone cell */
   width: calc(100vh - var(--zone-h) * 2);
   transform: rotate(90deg);
   border-top: 1px solid var(--gold-faint);
   border-bottom: 1px solid var(--gold-faint);
+  flex-shrink: 0;
 }
 #zone-right .zone-strip {
   display: flex; align-items: center; gap: 10px; padding: 8px 12px;
@@ -149,6 +148,7 @@ html, body {
   transform: rotate(-90deg);
   border-top: 1px solid var(--gold-faint);
   border-bottom: 1px solid var(--gold-faint);
+  flex-shrink: 0;
 }
 
 /* Zone content */
@@ -183,32 +183,37 @@ html, body {
   gap: 10px; padding: 12px; overflow: hidden;
 }
 
-/* ── Pegboard ── */
+/* ── Pegboard: 4 columns of 30 holes each ── */
+/* Snake: col1 top→bot (1-30), col2 bot→top (31-60), col3 top→bot (61-90), col4 bot→top (91-120) */
 #pegboard {
-  display: flex; flex-direction: row; gap: 0;
+  display: flex; flex-direction: row; align-items: stretch;
+  gap: 0;
   background: rgba(0,0,0,0.3); border-radius: 14px;
   border: 1px solid var(--gold-faint);
-  padding: 10px 12px;
-  /* flex-shrink so it fits vertically */
-  flex-shrink: 1; overflow: hidden;
+  padding: 10px 10px;
+  flex-shrink: 1;
 }
 
-/* Two hole columns + a narrow middle separator */
 .hole-col {
   display: flex; flex-direction: column;
   gap: 3px; align-items: center;
 }
+/* Separator between each pair of columns */
 .col-sep {
-  width: 16px; display: flex; flex-direction: column;
+  width: 14px; display: flex; flex-direction: column;
   align-items: center; justify-content: space-between;
-  padding: 2px 0;
+  padding: 2px 0; flex-shrink: 0;
 }
 .col-sep-cap {
-  width: 12px; height: 10px; border-radius: 6px;
+  width: 10px; height: 8px; border-radius: 5px;
   background: rgba(212,196,131,0.12); border: 1px solid var(--gold-faint);
 }
 .col-sep-line {
-  flex: 1; width: 2px; background: rgba(255,255,255,0.06); border-radius: 1px; margin: 3px 0;
+  flex: 1; width: 2px; background: rgba(255,255,255,0.06); border-radius: 1px; margin: 2px 0;
+}
+/* Wider gap between col-pair 1-2 and col-pair 3-4 to visually group the snake */
+.col-gap {
+  width: 10px; flex-shrink: 0;
 }
 
 /* Individual holes */
@@ -410,15 +415,15 @@ html, body {
   <div class="zone-cell" id="zone-right"> <div class="zone-strip" id="zs-right"></div></div>
 
   <div id="board-area">
-    <!-- Pegboard: two columns snaking vertically -->
+    <!-- Pegboard: 4 columns, 30 holes each, snaking -->
     <div id="pegboard">
-      <div class="hole-col" id="col-left"></div>
-      <div class="col-sep">
-        <div class="col-sep-cap"></div>
-        <div class="col-sep-line"></div>
-        <div class="col-sep-cap"></div>
-      </div>
-      <div class="hole-col" id="col-right"></div>
+      <div class="hole-col" id="col-0"></div>
+      <div class="col-sep"><div class="col-sep-cap"></div><div class="col-sep-line"></div><div class="col-sep-cap"></div></div>
+      <div class="hole-col" id="col-1"></div>
+      <div class="col-gap"></div>
+      <div class="hole-col" id="col-2"></div>
+      <div class="col-sep"><div class="col-sep-cap"></div><div class="col-sep-line"></div><div class="col-sep-cap"></div></div>
+      <div class="hole-col" id="col-3"></div>
     </div>
 
     <!-- Info panel below board -->
@@ -612,15 +617,19 @@ function zoneHTML(pi,p){
 }
 
 // ── Peg Board ─────────────────────────────────────────────────────────────
-// Left col: holes 1→60, top to bottom
-// Right col: holes 61→120, bottom to top (rendered 120→61 top-to-bottom)
+// 4 columns of 30 holes, snaking:
+// col-0: holes  1-30  top→bottom
+// col-1: holes 31-60  bottom→top  (rendered 60→31 top-to-bottom)
+// col-2: holes 61-90  top→bottom
+// col-3: holes 91-120 bottom→top  (rendered 120→91 top-to-bottom)
 function renderPegBoard(){
-  const T=WIN-1, half=T/2;
-  let lH='',rH='';
-  for(let h=1;h<=half;h++)  lH+=holeHTML(h);
-  for(let h=T;h>half;h--)   rH+=holeHTML(h);
-  document.getElementById('col-left').innerHTML=lH;
-  document.getElementById('col-right').innerHTML=rH;
+  const segs=[[1,30,false],[31,60,true],[61,90,false],[91,120,true]];
+  segs.forEach(([start,end,rev],ci)=>{
+    let html='';
+    if(rev){ for(let h=end;h>=start;h--) html+=holeHTML(h); }
+    else    { for(let h=start;h<=end;h++) html+=holeHTML(h); }
+    document.getElementById(`col-${ci}`).innerHTML=html;
+  });
 }
 
 function holeHTML(h){
