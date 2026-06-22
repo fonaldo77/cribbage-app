@@ -73,8 +73,9 @@ html, body {
 }
 #game-screen.active { display: grid; }
 
-#zone-top    { grid-column: 2; grid-row: 1; display: none; transform: rotate(180deg); align-items: center; }
-#zone-bottom { grid-column: 2; grid-row: 3; display: none; align-items: center; }
+/* Zone cells — top/bottom are column-flex to hold name above strip */
+#zone-top    { grid-column: 2; grid-row: 1; display: none; transform: rotate(180deg); flex-direction: column; align-items: center; justify-content: center; }
+#zone-bottom { grid-column: 2; grid-row: 3; display: none; flex-direction: column; align-items: center; justify-content: center; }
 #zone-left   { grid-column: 1; grid-row: 2; display: none; align-items: center; justify-content: center; overflow: hidden; }
 #zone-right  { grid-column: 3; grid-row: 2; display: none; align-items: center; justify-content: center; overflow: hidden; }
 #zone-top.visible    { display: flex; }
@@ -82,41 +83,59 @@ html, body {
 #zone-left.visible   { display: flex; }
 #zone-right.visible  { display: flex; }
 
-/* Horizontal strips */
+/* Name/score header — sits OUTSIDE the strip, above it for top/bottom zones */
+.zone-header {
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  margin-bottom: 3px;
+}
+.zone-header-name {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700;
+  letter-spacing: 3px; white-space: nowrap; line-height: 1;
+}
+.zone-header-score {
+  font-family: var(--font-display); font-size: 28px; font-weight: 700;
+  line-height: 1.05; color: var(--cream);
+}
+.zone-header-stats { font-size: 8px; color: var(--gold-dim); letter-spacing: 1px; }
+
+/* Side zone wrapper — rotate the whole column (header + strip together) */
+.side-zone-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  flex-shrink: 0;
+}
+#zone-left  .side-zone-wrap { transform: rotate(90deg); }
+#zone-right .side-zone-wrap { transform: rotate(-90deg); }
+
+/* Horizontal strips — centered */
 #zone-top .zone-strip, #zone-bottom .zone-strip {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 10px; width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 5px 10px; width: 100%;
   border-top: 1px solid var(--gold-faint);
 }
 #zone-top .zone-strip { border-top: none; border-bottom: 1px solid var(--gold-faint); }
 
-/* Side strips — rotated */
+/* Side strips — fixed width for rotation, content centered */
 #zone-left .zone-strip, #zone-right .zone-strip {
-  display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+  display: flex; align-items: center; justify-content: center; gap: 8px; padding: 5px 10px;
   width: calc(100vh - var(--zone-h) * 2);
   max-width: 480px;
   border-top: 1px solid var(--gold-faint);
   border-bottom: 1px solid var(--gold-faint);
   flex-shrink: 0;
 }
-#zone-left .zone-strip  { transform: rotate(90deg); }
-#zone-right .zone-strip { transform: rotate(-90deg); }
 
-/* Zone content */
-.zone-info { display: flex; flex-direction: column; gap: 1px; min-width: 60px; flex-shrink: 0; }
-.zone-name  { font-size: 9px; letter-spacing: 2px; font-weight: 600; white-space: nowrap; }
-.zone-score { font-family: var(--font-display); font-size: 28px; font-weight: 700; line-height: 1; color: var(--cream); }
+/* Zone content (strip only — name/score now in zone-header above strip) */
 .zone-stats { font-size: 8px; color: var(--gold-dim); white-space: nowrap; }
 .peg-rows   { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
 .peg-btn-row { display: flex; gap: 3px; }
 .pz-btn {
-  flex: 1; height: 28px; min-width: 0; max-width: 36px; border-radius: 6px; border: 1px solid;
-  font-family: var(--font-display); font-weight: 700; font-size: 13px;
+  flex: 1; height: 32px; min-width: 0; max-width: 40px; border-radius: 6px; border: 1px solid;
+  font-family: var(--font-display); font-weight: 700; font-size: 17px;
   cursor: pointer; transition: transform 0.1s, opacity 0.1s;
   display: flex; align-items: center; justify-content: center;
 }
 .pz-btn:active { transform: scale(0.88); opacity: 0.7; }
-.pz-btn.minus { font-size: 11px; opacity: 0.5; }
+.pz-btn.minus { font-size: 14px; opacity: 0.5; }
 .calc-zone-btn {
   padding: 5px 8px; border-radius: 7px; border: 1px solid;
   background: transparent; font-family: var(--font-ui);
@@ -173,7 +192,7 @@ html, body {
 #starter-center {
   margin-top: 8px; padding-top: 8px;
   border-top: 1px solid var(--gold-faint);
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
 }
 .starter-center-label { color: var(--gold-dim); font-size: 9px; letter-spacing: 2px; flex-shrink: 0; }
 .starter-mini-card {
@@ -217,6 +236,13 @@ html, body {
 .ctrl-btn:active { border-color: var(--gold-dim); color: var(--gold); }
 
 /* ══ CALC OVERLAYS — compact, centered on player zone ══ */
+/* Invisible backdrop catches taps outside the calc panel */
+.calc-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 49;
+  background: transparent;
+}
+.calc-backdrop.active { display: block; }
+
 .calc-overlay {
   position: fixed; z-index: 50;
   background: rgba(5,12,8,0.97); border: 1px solid var(--gold-faint);
@@ -384,10 +410,10 @@ html, body {
 
 <!-- ══ GAME ══ -->
 <div id="game-screen">
-  <div id="zone-top">   <div class="zone-strip" id="zs-top"></div></div>
-  <div id="zone-bottom"><div class="zone-strip" id="zs-bottom"></div></div>
-  <div id="zone-left">  <div class="zone-strip" id="zs-left"></div></div>
-  <div id="zone-right"> <div class="zone-strip" id="zs-right"></div></div>
+  <div id="zone-top">   <div class="zone-header" id="zh-top"></div><div class="zone-strip" id="zs-top"></div></div>
+  <div id="zone-bottom"><div class="zone-header" id="zh-bottom"></div><div class="zone-strip" id="zs-bottom"></div></div>
+  <div id="zone-left">  <div class="side-zone-wrap"><div class="zone-header" id="zh-left"></div><div class="zone-strip" id="zs-left"></div></div></div>
+  <div id="zone-right"> <div class="side-zone-wrap"><div class="zone-header" id="zh-right"></div><div class="zone-strip" id="zs-right"></div></div></div>
 
   <div id="board-area">
     <div id="pegboard">
@@ -424,6 +450,9 @@ html, body {
     </div>
   </div>
 </div>
+
+<!-- ══ CALC BACKDROP (tap outside to close) ══ -->
+<div id="calc-backdrop" class="calc-backdrop" onclick="closeAllCalc()"></div>
 
 <!-- ══ CALC OVERLAYS ══ -->
 <div id="calc-bottom" class="calc-overlay"><div class="calc-inner" id="ci-bottom"></div></div>
@@ -529,13 +558,13 @@ function initGame(){
   document.getElementById('setup-screen').classList.remove('active');
   document.getElementById('win-screen').classList.remove('active');
   document.getElementById('game-screen').classList.add('active');
-  document.querySelectorAll('.calc-overlay').forEach(o=>o.classList.remove('active'));
+  closeAllCalc();
   renderGame();
 }
 function showSetup(){
   document.getElementById('win-screen').classList.remove('active');
   document.getElementById('game-screen').classList.remove('active');
-  document.querySelectorAll('.calc-overlay').forEach(o=>o.classList.remove('active'));
+  closeAllCalc();
   document.getElementById('setup-screen').classList.add('active');
   setCount(S.n); renderNameFields();
 }
@@ -558,19 +587,29 @@ function execConfirm(){ closeConfirm(); pAct==='restart'?restartGame():showSetup
 function renderGame(){ renderZones(); renderPegBoard(); renderScores(); renderStarterCenter(); }
 
 function renderZones(){
-  SIDES.forEach(s=>{ document.getElementById(`zone-${s}`).classList.remove('visible'); document.getElementById(`zs-${s}`).innerHTML=''; });
-  S.players.forEach((p,pi)=>{ document.getElementById(`zone-${p.side}`).classList.add('visible'); document.getElementById(`zs-${p.side}`).innerHTML=zoneHTML(pi,p); });
+  SIDES.forEach(s=>{
+    document.getElementById(`zone-${s}`).classList.remove('visible');
+    document.getElementById(`zs-${s}`).innerHTML='';
+    document.getElementById(`zh-${s}`).innerHTML='';
+  });
+  S.players.forEach((p,pi)=>{
+    const side=p.side;
+    document.getElementById(`zone-${side}`).classList.add('visible');
+    const c=PC[p.ci];
+    // Header: name + score + stats, outside the strip
+    document.getElementById(`zh-${side}`).innerHTML=`
+      <div class="zone-header-name" style="color:${c}">${p.name.toUpperCase()}</div>
+      <div class="zone-header-score" style="color:${c}">${p.score}</div>
+      <div class="zone-header-stats">H:${p.handPts} C:${p.cribPts} P:${p.pegPts}</div>`;
+    // Strip: only buttons + calc
+    document.getElementById(`zs-${side}`).innerHTML=zoneStripHTML(pi,p);
+  });
 }
-function zoneHTML(pi,p){
+function zoneStripHTML(pi,p){
   const c=PC[p.ci],bg=PBG[p.ci];
   const plus=[1,2,3,4,5,6].map(n=>`<button class="pz-btn" onclick="addScore(${pi},${n},'peg')" style="color:${c};background:${bg};border-color:${c}">+${n}</button>`).join('');
   const minus=[1,2,3,4,5,6].map(n=>`<button class="pz-btn minus" onclick="addScore(${pi},${-n},'peg')" style="color:${c};background:${bg};border-color:${c}">−${n}</button>`).join('');
-  return `<div class="zone-info">
-    <div class="zone-name" style="color:${c}">${p.name.toUpperCase()}</div>
-    <div class="zone-score">${p.score}</div>
-    <div class="zone-stats">H:${p.handPts} C:${p.cribPts} P:${p.pegPts}</div>
-  </div>
-  <div class="peg-rows"><div class="peg-btn-row">${plus}</div><div class="peg-btn-row">${minus}</div></div>
+  return `<div class="peg-rows"><div class="peg-btn-row">${plus}</div><div class="peg-btn-row">${minus}</div></div>
   <button class="calc-zone-btn" onclick="openCalc(${pi},'${p.side}')" style="border-color:${c};color:${c}">CALC ▸</button>`;
 }
 
@@ -677,7 +716,7 @@ function addScore(pi,pts,type){
   renderGame();
 }
 function showWin(player){
-  document.querySelectorAll('.calc-overlay').forEach(o=>o.classList.remove('active'));
+  closeAllCalc();
   document.getElementById('game-screen').classList.remove('active');
   document.getElementById('win-name').textContent=player.name.toUpperCase();
   document.getElementById('win-name').style.color=PC[player.ci];
@@ -690,13 +729,21 @@ function showWin(player){
 }
 
 // ── Calculator ────────────────────────────────────────────────────────────
+function closeAllCalc(){
+  closeAllCalc();
+  document.getElementById('calc-backdrop').classList.remove('active');
+}
 function openCalc(pi,side){
-  document.querySelectorAll('.calc-overlay').forEach(o=>o.classList.remove('active'));
+  closeAllCalc();
   S.calc[pi]=dc();
   buildCalc(pi,`ci-${side}`,side);
   document.getElementById(`calc-${side}`).classList.add('active');
+  document.getElementById('calc-backdrop').classList.add('active');
 }
-function closeCalc(side){ document.getElementById(`calc-${side}`).classList.remove('active'); }
+function closeCalc(side){
+  document.getElementById(`calc-${side}`).classList.remove('active');
+  document.getElementById('calc-backdrop').classList.remove('active');
+}
 
 function buildCalc(pi,inn,side){
   const cs=S.calc[pi],p=S.players[pi],c=PC[p.ci];
