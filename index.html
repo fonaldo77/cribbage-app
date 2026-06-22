@@ -94,6 +94,7 @@ html, body {
 #zone-left .zone-strip, #zone-right .zone-strip {
   display: flex; align-items: center; gap: 8px; padding: 6px 10px;
   width: calc(100vh - var(--zone-h) * 2);
+  max-width: 480px;
   border-top: 1px solid var(--gold-faint);
   border-bottom: 1px solid var(--gold-faint);
   flex-shrink: 0;
@@ -109,7 +110,7 @@ html, body {
 .peg-rows   { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
 .peg-btn-row { display: flex; gap: 3px; }
 .pz-btn {
-  flex: 1; height: 28px; min-width: 0; border-radius: 6px; border: 1px solid;
+  flex: 1; height: 28px; min-width: 0; max-width: 36px; border-radius: 6px; border: 1px solid;
   font-family: var(--font-display); font-weight: 700; font-size: 13px;
   cursor: pointer; transition: transform 0.1s, opacity 0.1s;
   display: flex; align-items: center; justify-content: center;
