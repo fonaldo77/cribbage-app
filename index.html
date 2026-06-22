@@ -73,17 +73,23 @@ html, body {
 }
 #game-screen.active { display: grid; }
 
-/* Zone cells — top/bottom are column-flex to hold name above strip */
-#zone-top    { grid-column: 2; grid-row: 1; display: none; transform: rotate(180deg); flex-direction: column; align-items: center; justify-content: center; }
-#zone-bottom { grid-column: 2; grid-row: 3; display: none; flex-direction: column; align-items: center; justify-content: center; }
-#zone-left   { grid-column: 1; grid-row: 2; display: none; align-items: center; justify-content: center; overflow: hidden; }
-#zone-right  { grid-column: 3; grid-row: 2; display: none; align-items: center; justify-content: center; overflow: hidden; }
-#zone-top.visible    { display: flex; }
-#zone-bottom.visible { display: flex; }
-#zone-left.visible   { display: flex; }
-#zone-right.visible  { display: flex; }
+/* Zone cells always occupy their grid slots.
+   Use visibility:hidden (not display:none) so grid structure is preserved. */
+#zone-top    { grid-column: 2; grid-row: 1; display: flex; visibility: hidden; transform: rotate(180deg); flex-direction: column; align-items: center; justify-content: center; }
+#zone-bottom { grid-column: 2; grid-row: 3; display: flex; visibility: hidden; flex-direction: column; align-items: center; justify-content: center; }
+#zone-left   { grid-column: 1; grid-row: 2; display: flex; visibility: hidden; align-items: center; justify-content: center; overflow: hidden; }
+#zone-right  { grid-column: 3; grid-row: 2; display: flex; visibility: hidden; align-items: center; justify-content: center; overflow: hidden; }
+#zone-top.visible    { visibility: visible; pointer-events: auto; }
+#zone-bottom.visible { visibility: visible; pointer-events: auto; }
+#zone-left.visible   { visibility: visible; pointer-events: auto; }
+#zone-right.visible  { visibility: visible; pointer-events: auto; }
+#zone-top:not(.visible), #zone-bottom:not(.visible),
+#zone-left:not(.visible), #zone-right:not(.visible) { pointer-events: none; }
 
-/* Name/score header — sits OUTSIDE the strip, above it for top/bottom zones */
+/* Board area — explicitly center cell */
+#board-area { grid-column: 2; grid-row: 2; }
+
+/* Name/score header — outside and above the strip */
 .zone-header {
   display: flex; flex-direction: column; align-items: center; gap: 0;
   margin-bottom: 3px;
@@ -98,7 +104,7 @@ html, body {
 }
 .zone-header-stats { font-size: 8px; color: var(--gold-dim); letter-spacing: 1px; }
 
-/* Side zone wrapper — rotate the whole column (header + strip together) */
+/* Side zone wrapper — rotates header + strip together */
 .side-zone-wrap {
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   flex-shrink: 0;
@@ -106,7 +112,7 @@ html, body {
 #zone-left  .side-zone-wrap { transform: rotate(90deg); }
 #zone-right .side-zone-wrap { transform: rotate(-90deg); }
 
-/* Horizontal strips — centered */
+/* Horizontal strips (top/bottom) — centered */
 #zone-top .zone-strip, #zone-bottom .zone-strip {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   padding: 5px 10px; width: 100%;
@@ -114,7 +120,7 @@ html, body {
 }
 #zone-top .zone-strip { border-top: none; border-bottom: 1px solid var(--gold-faint); }
 
-/* Side strips — fixed width for rotation, content centered */
+/* Side strips — sized for rotation, centered */
 #zone-left .zone-strip, #zone-right .zone-strip {
   display: flex; align-items: center; justify-content: center; gap: 8px; padding: 5px 10px;
   width: calc(100vh - var(--zone-h) * 2);
@@ -124,7 +130,7 @@ html, body {
   flex-shrink: 0;
 }
 
-/* Zone content (strip only — name/score now in zone-header above strip) */
+/* Zone content (strip only — name/score in zone-header) */
 .zone-stats { font-size: 8px; color: var(--gold-dim); white-space: nowrap; }
 .peg-rows   { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
 .peg-btn-row { display: flex; gap: 3px; }
@@ -588,7 +594,8 @@ function renderGame(){ renderZones(); renderPegBoard(); renderScores(); renderSt
 
 function renderZones(){
   SIDES.forEach(s=>{
-    document.getElementById(`zone-${s}`).classList.remove('visible');
+    const z=document.getElementById(`zone-${s}`);
+    z.classList.remove('visible');
     document.getElementById(`zs-${s}`).innerHTML='';
     document.getElementById(`zh-${s}`).innerHTML='';
   });
