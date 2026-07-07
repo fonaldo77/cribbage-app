@@ -244,6 +244,7 @@ html, body {
 .leg-label { font-size: 8px; color: var(--gold-dim); letter-spacing: 1px; white-space: nowrap; }
 .ctrl-btn { padding: 7px 8px; border-radius: 7px; border: 1px solid var(--gold-faint); background: rgba(0,0,0,0.2); color: var(--gold-dim); font-family: var(--font-ui); font-size: 9px; letter-spacing: 1px; cursor: pointer; white-space: nowrap; }
 .ctrl-btn:active { border-color: var(--gold-dim); color: var(--gold); }
+.ctrl-btn:disabled { opacity: 0.25; cursor: not-allowed; }
 
 /* Peg +score buttons — enlarged for easy tapping (minus row removed) */
 .peg-btn-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
@@ -405,6 +406,8 @@ html, body {
 .win-btns { display:flex; gap:12px; }
 .play-again-btn { padding:14px 36px; border-radius:12px; background:linear-gradient(135deg,var(--felt-light),#1a4a30); border:1px solid rgba(212,196,131,0.4); color:var(--gold); font-family:var(--font-ui); font-size:13px; letter-spacing:3px; cursor:pointer; }
 .back-setup-btn { padding:14px 36px; border-radius:12px; background:transparent; border:1px solid var(--gold-faint); color:var(--gold-dim); font-family:var(--font-ui); font-size:13px; letter-spacing:3px; cursor:pointer; }
+.win-undo-btn { margin-top:18px; background:transparent; border:none; color:var(--gold-dim); font-family:var(--font-ui); font-size:10px; letter-spacing:2px; cursor:pointer; opacity:0.6; }
+.win-undo-btn:active { opacity:1; color:var(--gold); }
 </style>
 </head>
 <body>
@@ -466,6 +469,7 @@ html, body {
           <div class="leg-item"><div class="leg-dot" style="background:rgba(255,80,80,0.4);border:1px solid rgba(255,80,80,0.5)"></div><span class="leg-label">SKUNK 91</span></div>
           <div class="leg-item"><div class="leg-dot" style="background:rgba(212,196,131,0.3);border:1px solid rgba(212,196,131,0.5)"></div><span class="leg-label">WIN 121</span></div>
         </div>
+        <button class="ctrl-btn" id="undo-btn" onclick="undo()" disabled>↩ UNDO</button>
         <button class="ctrl-btn" onclick="confirmAction('restart')">↺ RESTART</button>
         <button class="ctrl-btn" onclick="confirmAction('setup')">⚙ SETUP</button>
       </div>
@@ -503,6 +507,7 @@ html, body {
     <button class="play-again-btn" onclick="restartGame()">PLAY AGAIN</button>
     <button class="back-setup-btn" onclick="showSetup()">SETUP</button>
   </div>
+  <button class="win-undo-btn" onclick="undo()">↩ UNDO LAST SCORE</button>
 </div>
 
 <script>
@@ -523,6 +528,7 @@ let S={
   players:[], calc:{},
   starter:null,          // shared starter card
   starterPickingRank:null,
+  history:[],            // snapshots of players[] for undo
 };
 const dc=()=>({handType:'hand',handCards:[],handPickingRank:null,calcResult:null,sentScore:null,mugginsTarget:null});
 
@@ -577,6 +583,7 @@ function initGame(){
   S.players=S.setup.slice(0,S.n).map((ps,i)=>({name:ps.name,side:ps.side,ci:i,score:0,prevScore:0,handPts:0,cribPts:0,pegPts:0}));
   S.calc={}; for(let i=0;i<S.n;i++) S.calc[i]=dc();
   S.starter=null; S.starterPickingRank=null;
+  S.history=[];
   document.getElementById('setup-screen').classList.remove('active');
   document.getElementById('win-screen').classList.remove('active');
   document.getElementById('game-screen').classList.add('active');
@@ -606,7 +613,7 @@ function closeConfirm(){ document.getElementById('confirm-modal').classList.remo
 function execConfirm(){ closeConfirm(); pAct==='restart'?restartGame():showSetup(); }
 
 // ── Render ────────────────────────────────────────────────────────────────
-function renderGame(){ renderZones(); renderPegBoard(); renderScores(); renderStarterCenter(); }
+function renderGame(){ renderZones(); renderPegBoard(); renderScores(); renderStarterCenter(); updateUndoBtn(); }
 
 function renderZones(){
   SIDES.forEach(s=>{
@@ -748,6 +755,8 @@ function clearStarter(){
 
 // ── Scoring ───────────────────────────────────────────────────────────────
 function addScore(pi,pts,type){
+  S.history.push(JSON.parse(JSON.stringify(S.players)));
+  if(S.history.length>20) S.history.shift();
   const p=S.players[pi];
   const ns=Math.max(0,Math.min(p.score+pts,WIN));
   p.prevScore=p.score; p.score=ns;
@@ -756,6 +765,17 @@ function addScore(pi,pts,type){
   else p.pegPts+=pts;
   if(ns>=WIN){showWin(p);return;}
   renderGame();
+}
+function undo(){
+  if(!S.history.length) return;
+  S.players=S.history.pop();
+  document.getElementById('win-screen').classList.remove('active');
+  document.getElementById('game-screen').classList.add('active');
+  renderGame();
+}
+function updateUndoBtn(){
+  const b=document.getElementById('undo-btn');
+  if(b) b.disabled=S.history.length===0;
 }
 function showWin(player){
   closeAllCalc();
