@@ -594,16 +594,7 @@ function closeConfirm(){ document.getElementById('confirm-modal').classList.remo
 function execConfirm(){ closeConfirm(); pAct==='restart'?restartGame():showSetup(); }
 
 // ── Render ────────────────────────────────────────────────────────────────
-function renderGame(){
-  try {
-    renderZones();
-    renderPegBoard();
-    renderScores();
-    renderStarterCenter();
-  } catch(e) {
-    document.body.innerHTML += '<pre style="color:red;position:fixed;top:100px;left:0;z-index:9999;background:#000;padding:10px;font-size:11px;max-width:100vw;overflow:auto">renderGame: ' + e.stack + '</pre>';
-  }
-}
+function renderGame(){ renderZones(); renderPegBoard(); renderScores(); renderStarterCenter(); }
 
 function renderZones(){
   SIDES.forEach(s=>{
@@ -757,7 +748,7 @@ function showWin(player){
 
 // ── Calculator ────────────────────────────────────────────────────────────
 function closeAllCalc(){
-  closeAllCalc();
+  document.querySelectorAll('.calc-overlay').forEach(o=>o.classList.remove('active'));
   document.getElementById('calc-backdrop').classList.remove('active');
 }
 function openCalc(pi,side){
@@ -968,11 +959,7 @@ function clmMug(pi,tpi,side){
   addScore(tpi,cs.calcResult.total-cs.sentScore,'peg'); rfResult(pi,side);
 }
 
-try {
-  setCount(2);
-} catch(e) {
-  document.body.innerHTML += '<pre style="color:red;position:fixed;top:0;left:0;z-index:9999;background:#000;padding:10px;font-size:11px;max-width:100vw;overflow:auto">' + e.stack + '</pre>';
-}
+setCount(2);
 </script>
 </body>
 </html>
