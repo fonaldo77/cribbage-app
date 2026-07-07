@@ -708,17 +708,30 @@ function starterPickRank(r){
   S.starterPickingRank=S.starterPickingRank===r?null:r;
   renderStarterCenter();
 }
+function resetOpenCalcResults(){
+  // Cut card changed/cleared: any calculator panel showing an old result/muggins
+  // prompt is now stale, since its buttons reference calc state we're wiping.
+  // Clear the visible result HTML and refresh the calculate button so nothing
+  // dangling can be tapped.
+  for(let i=0;i<S.n;i++){
+    const side=S.players[i]&&S.players[i].side;
+    const r=document.getElementById(`c${i}-res`); if(r) r.innerHTML='';
+    if(side) rfBtn(i);
+  }
+}
 function starterPickSuit(s){
   if(!S.starterPickingRank) return;
   S.starter={rank:S.starterPickingRank,suit:s};
   S.starterPickingRank=null;
   // Clear any calc results since starter changed
   for(let i=0;i<S.n;i++){ S.calc[i].calcResult=null; S.calc[i].sentScore=null; S.calc[i].mugginsTarget=null; }
+  resetOpenCalcResults();
   renderStarterCenter();
 }
 function clearStarter(){
   S.starter=null; S.starterPickingRank=null;
   for(let i=0;i<S.n;i++){ S.calc[i].calcResult=null; S.calc[i].sentScore=null; S.calc[i].mugginsTarget=null; }
+  resetOpenCalcResults();
   renderStarterCenter();
 }
 
@@ -927,7 +940,7 @@ function calc(pi,side){
 function rfResult(pi,side){
   const cs=S.calc[pi],r=cs.calcResult; if(!r) return;
   const p=S.players[pi],c=PC[p.ci],bg=PBG[p.ci];
-  const el=document.getElementById(`c${pi}-res`);
+  const el=document.getElementById(`c${pi}-res`); if(!el) return;
   const diff=r.total-(cs.sentScore??0);
   let send='';
   if(cs.sentScore===null){
@@ -951,11 +964,13 @@ function rfResult(pi,side){
     </div>${send}</div>`;
 }
 function sendB(pi,side,pts){
-  const cs=S.calc[pi]; cs.sentScore=pts;
+  const cs=S.calc[pi]; if(!cs.calcResult) return; // stale UI guard
+  cs.sentScore=pts;
   addScore(pi,pts,cs.handType); rfResult(pi,side);
 }
 function clmMug(pi,tpi,side){
-  const cs=S.calc[pi]; cs.mugginsTarget=tpi;
+  const cs=S.calc[pi]; if(!cs.calcResult) return; // stale UI guard: calc was reset (e.g. cut card changed) after this rendered
+  cs.mugginsTarget=tpi;
   addScore(tpi,cs.calcResult.total-cs.sentScore,'peg'); rfResult(pi,side);
 }
 
