@@ -245,6 +245,18 @@ html, body {
 .ctrl-btn { padding: 7px 8px; border-radius: 7px; border: 1px solid var(--gold-faint); background: rgba(0,0,0,0.2); color: var(--gold-dim); font-family: var(--font-ui); font-size: 9px; letter-spacing: 1px; cursor: pointer; white-space: nowrap; }
 .ctrl-btn:active { border-color: var(--gold-dim); color: var(--gold); }
 
+/* Peg +score buttons — enlarged for easy tapping (minus row removed) */
+.peg-btn-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+.pz-btn {
+  min-width: 48px; padding: 14px 6px;
+  border-radius: 10px; border: 1.5px solid;
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  cursor: pointer; transition: transform 0.1s;
+}
+.pz-btn:active { transform: scale(0.9); }
+.calc-zone-btn { margin-top: 4px; padding: 8px 14px; border-radius: 8px; border: 1.5px solid; background: transparent; font-family: var(--font-ui); font-size: 11px; letter-spacing: 2px; cursor: pointer; }
+.calc-zone-btn:active { transform: scale(0.96); }
+
 /* ══ CALC OVERLAYS — compact, centered on player zone ══ */
 /* Invisible backdrop catches taps outside the calc panel */
 .calc-backdrop {
@@ -619,8 +631,7 @@ function renderZones(){
 function zoneStripHTML(pi,p){
   const c=PC[p.ci],bg=PBG[p.ci];
   const plus=[1,2,3,4,5,6].map(n=>`<button class="pz-btn" onclick="addScore(${pi},${n},'peg')" style="color:${c};background:${bg};border-color:${c}">+${n}</button>`).join('');
-  const minus=[1,2,3,4,5,6].map(n=>`<button class="pz-btn minus" onclick="addScore(${pi},${-n},'peg')" style="color:${c};background:${bg};border-color:${c}">−${n}</button>`).join('');
-  return `<div class="peg-rows"><div class="peg-btn-row">${plus}</div><div class="peg-btn-row">${minus}</div></div>
+  return `<div class="peg-btn-row">${plus}</div>
   <button class="calc-zone-btn" onclick="openCalc(${pi},'${p.side}')" style="border-color:${c};color:${c}">CALC ▸</button>`;
 }
 
